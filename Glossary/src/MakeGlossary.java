@@ -17,8 +17,16 @@ public final class MakeGlossary {
     private MakeGlossary() {
     }
 
-    public static void createHomePage(SimpleWriter index) {
-        index.print("<!DOCTYPE html>");
+    /**
+     * Creates the header for the base index file.
+     *
+     * @param index
+     *            The html to output the header to
+     */
+    public static void createHomePageHeader(SimpleWriter index) {
+        index.println("<!DOCTYPE html>");
+        index.println("<html>\n<head>\n<title>Glossary</title></head>\n<body>"
+                + "<h2>Glossary</h2>" + "<hr />" + "<h3>Word List</h3>");
     }
 
     /**
@@ -35,25 +43,29 @@ public final class MakeGlossary {
         SimpleWriter out = new SimpleWriter1L();
 
         /*
+         * Sets for storing words and definitions instantiation.
+         */
+
+        /*
          * Creates home page and makes it into a valid html page.
          */
 
         SimpleWriter index = new SimpleWriter1L("data/index.html");
-        createHomePage(index);
+        createHomePageHeader(index);
 
         /*
          * Reads in the text file to use as the input.
          */
 
-//        out.println("Enter Location & Name of Input File: ");
-//        SimpleReader fileIn = new SimpleReader1L(in.nextLine());
+        out.println("Enter Location & Name of Input File: ");
+        SimpleReader fileIn = new SimpleReader1L(in.nextLine());
 
         /*
          * Close I/O Streams.
          */
         in.close();
         out.close();
-
+        index.close();
     }
 
 }
