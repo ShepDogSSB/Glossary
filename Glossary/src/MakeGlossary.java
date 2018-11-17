@@ -31,6 +31,8 @@ public final class MakeGlossary {
         // Close I/O Streams
         in.close();
         out.close();
+
+        // This is a test
     }
 
 }
