@@ -41,36 +41,24 @@ public final class MakeGlossary {
     }
 
     /**
-     * Gets the words from the input and puts them in a Set.
+     * Gets the definitions from the input and puts them in a Set.
      *
+     * @param definitions
+     *            the queue for the definitions to be stored
      * @param words
-     *            the set for the words to be stored
+     *            the queue for the definitions to be stored
      * @param in
      *            The input file stream.
      */
-    public static void getWords(Queue<String> words, SimpleReader in) {
+    public static void getWordsAndDefinitions(Queue<String> words,
+            Queue<String> definitions, SimpleReader in) {
+
         while (!in.atEOS()) {
             String testVal = in.nextLine();
             if (!testVal.contains(" ") && !testVal.isEmpty()) {
                 words.enqueue(testVal);
-            }
-        }
-    }
+            } else if (testVal.contains(" ")) {
 
-    /**
-     * Gets the definitions from the input and puts them in a Set.
-     *
-     * @param definitions
-     *            the set for the definitions to be stored
-     * @param in
-     *            The input file stream.
-     */
-    public static void getDefinitions(Queue<String> definitions,
-            SimpleReader in) {
-        while (!in.atEOS()) {
-            String testVal = in.nextLine();
-            if (testVal.contains(" ") && !testVal.isEmpty()) {
-                definitions.enqueue(testVal);
             }
         }
     }
@@ -115,12 +103,7 @@ public final class MakeGlossary {
          * Queue.
          */
 
-        getWords(words, fileIn);
-
-        fileIn.close();
-        SimpleReader fileInTwo = new SimpleReader1L(name);
-
-        getDefinitions(definitions, fileInTwo);
+        getWordsAndDefinitions(words, definitions, fileIn);
 
         /*
          * Creates the word pages for each glossary term.
@@ -128,6 +111,7 @@ public final class MakeGlossary {
         while (words.length() > 0 && definitions.length() > 0) {
             String tempWord = words.dequeue();
             String tempDefinition = definitions.dequeue();
+            out.println(tempDefinition);
             SimpleWriter tempOut = new SimpleWriter1L(
                     "data/" + tempWord + ".html");
 
@@ -138,7 +122,7 @@ public final class MakeGlossary {
          * Close I/O Streams.
          */
         in.close();
-        fileInTwo.close();
+        fileIn.close();
         out.close();
         index.close();
     }
