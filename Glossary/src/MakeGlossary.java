@@ -1,3 +1,5 @@
+import java.util.Comparator;
+
 import components.queue.Queue;
 import components.queue.Queue1L;
 import components.simplereader.SimpleReader;
@@ -18,6 +20,14 @@ public final class MakeGlossary {
      */
 
     private MakeGlossary() {
+    }
+
+    private static class StringLT implements Comparator<String> {
+
+        @Override
+        public int compare(String arg0, String arg1) {
+            return arg0.compareTo(arg1);
+        }
     }
 
     /**
@@ -53,11 +63,12 @@ public final class MakeGlossary {
      *            The input file stream.
      */
     public static void createWordPage(String word, String definition,
-            SimpleWriter out) {
+            SimpleWriter out, Queue<String> words) {
         out.println("<html>\n" + "<head>\n" + "<title>" + word + "</title>");
         out.println("</head>\n" + "<body>\n" + "<h2><b><i><font color=\"red\">"
                 + word + "</font></i></b></h2>");
-        out.println("<blockquote>" + definition + "</blockquote>");
+        String tempDef = replaceWithLinks(words, definition);
+        out.println("<blockquote>" + tempDef + "</blockquote>");
         out.println("<hr />");
         out.println("<p>Return to <a href=\"index.html\">index</a>.</p>\n"
                 + "</body>\n" + "</html>");
@@ -100,19 +111,20 @@ public final class MakeGlossary {
              */
             StringBuffer buffer = new StringBuffer();
             String def = "";
-            String n = in.nextLine();
+            String testVal = in.nextLine();
             /*
              * While the next line in the input isn't empty.
              */
-            while (!n.equals("")) {
+            while (!testVal.equals("")) {
                 /*
-                 * We check to see if it has a space in it (if it doesn't, that
-                 * means its a word.) and if it does we append that string to a
-                 * buffer (SpotBugs recommended using String Buffer).
+                 * We check to see if the next line has a space in it (if it
+                 * doesn't, that means its a word.) and if it does we append
+                 * that string to a buffer (SpotBugs recommended using String
+                 * Buffer).
                  */
-                if (n.contains(" ")) {
+                if (testVal.contains(" ")) {
                     //def += n + " ";
-                    buffer.append(n + " ");
+                    buffer.append(testVal + " ");
 
                 }
                 /*
@@ -121,9 +133,9 @@ public final class MakeGlossary {
                  * trying to parse through the input stream.
                  */
                 if (in.atEOS()) {
-                    n = "";
+                    testVal = "";
                 } else {
-                    n = in.nextLine();
+                    testVal = in.nextLine();
                 }
             }
             /*
@@ -133,6 +145,40 @@ public final class MakeGlossary {
             def = buffer.toString();
             definitions.enqueue(def);
         }
+    }
+
+    /**
+     *
+     */
+    public static void createList(SimpleWriter index, Queue<String> words) {
+        int count = 0;
+        index.println("<ul>");
+        while (count < words.length()) {
+            String word = words.front();
+            index.println(
+                    "<li><a href=" + word + ".html>" + word + "</a></li>");
+            words.rotate(1);
+            count++;
+        }
+    }
+
+    /**
+     *
+     */
+    public static String replaceWithLinks(Queue<String> words,
+            String definition) {
+        String result = "";
+        for (String word : words) {
+            for (String wordTwo : definition.split(" ")) {
+                if (definition.indexOf(word) != -1) {
+                    result = definition.replace(word, "<a href=\"" + word
+                            + ".html" + "\">" + word + "</a>");
+                } else {
+                    result = definition;
+                }
+            }
+        }
+        return result;
     }
 
     /**
@@ -184,29 +230,40 @@ public final class MakeGlossary {
 
         getWords(words, fileIn);
         SimpleReader fileIn2 = new SimpleReader1L(name);
+        fileIn.close();
         getDefinitions(definitions, fileIn2);
-        out.println(definitions);
 
         /*
          * Creates the word pages for each glossary term.
          */
-        while (words.length() > 0) {
-            String tempWord = words.dequeue();
+        int count = 0;
+        Queue<String> wordList = new Queue1L<>();
+        while (count < words.length()) {
+            String tempWord = words.front();
             String tempDefinition = definitions.dequeue();
             SimpleWriter tempOut = new SimpleWriter1L(
                     folder + "/" + tempWord + ".html");
-
-            createWordPage(tempWord, tempDefinition, tempOut);
+            createWordPage(tempWord, tempDefinition, tempOut, words);
+            words.rotate(1);
+            count++;
+            tempOut.close();
         }
 
         /*
          * Creates the list for the home page.
          */
+        Comparator<String> order = new StringLT();
+        words.sort(order);
+        createList(index, words);
 
         /*
-         * TODO: Sort the term pages in alphabetical order, put them in a list,
-         * then go into the word pages and add links where appropriate, then
-         * make sure everything is closed properly.
+         * Puts links in places where appropriate in the word pages.
+         */
+
+        /*
+         * TODO: go into the word pages and add links where appropriate, then
+         * make sure everything is closed properly. Also add comments to
+         * createWordPage
          */
 
         /*
@@ -214,7 +271,6 @@ public final class MakeGlossary {
          */
 
         in.close();
-        fileIn.close();
         fileIn2.close();
         out.close();
         index.close();
